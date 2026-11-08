@@ -36,8 +36,35 @@
   if(!(c.milestones||[]).length&&!(c.credentials||[]).length)$('moments').hidden=true;
   const contacts=[['WhatsApp',c.links?.whatsapp],['Email',c.email?'mailto:'+c.email:''],['Instagram',c.links?.instagram],['LinkedIn',c.links?.linkedin],['GitHub',c.links?.github]];contacts.forEach(([name,url])=>{if(safeUrl(url))$('contact-links').append(link(name+' ↗',url))});
   const chapters=[['about','The Pilot'],['services','Services'],['work','Projects'],['journey','How I Work'],['moments','Community'],['contact','Connect']];chapters.filter(([id])=>!$(id).hidden).forEach(([id,name],i)=>{const a=make('a');a.href='#'+id;a.dataset.section=id;a.append(make('span','EPISODE '+String(i+1).padStart(2,'0')),make('b',name));$('chapter-links').append(a)});
-  const open=$('opening'),profiles=$('profiles');let opener;
-  function stage(which){document.querySelectorAll('header,main,footer').forEach(el=>el.inert=which!=='home');open.hidden=which!=='opening';profiles.hidden=which!=='profiles';document.body.style.overflow=which==='home'?'':'hidden';if(which==='profiles')profiles.querySelector('button').focus()}
+  const open=$('opening'),profiles=$('profiles');let opener,gsapReady=false;
+  function initGSAP(){
+    if(gsapReady||typeof gsap==='undefined'||reduced)return;
+    gsapReady=true;
+    if(typeof ScrollTrigger!=='undefined')gsap.registerPlugin(ScrollTrigger);
+    const heroTl=gsap.timeline({defaults:{ease:'power3.out'}});
+    heroTl.fromTo('.hero-copy .eyebrow',{opacity:0,y:-20},{opacity:1,y:0,duration:0.7})
+      .fromTo('#hero-name',{opacity:0,y:30,scale:0.96},{opacity:1,y:0,scale:1,duration:0.9},'-=0.4')
+      .fromTo('.series-label',{opacity:0,letterSpacing:'20px'},{opacity:1,letterSpacing:'12px',duration:0.8},'-=0.6')
+      .fromTo('.hero-copy .meta',{opacity:0,y:15},{opacity:1,y:0,duration:0.6},'-=0.5')
+      .fromTo('#hero-intro',{opacity:0,y:20},{opacity:1,y:0,duration:0.7},'-=0.4')
+      .fromTo('.hero-copy .actions',{opacity:0,y:15},{opacity:1,y:0,duration:0.6},'-=0.4')
+      .fromTo('#hero-photo',{opacity:0,scale:1.08,filter:'blur(8px)'},{opacity:1,scale:1,filter:'blur(0px)',duration:1.2},0)
+      .fromTo('.floating-chip',{opacity:0,x:30,scale:0.9},{opacity:1,x:0,scale:1,duration:0.8,ease:'back.out(1.4)'},'-=0.6');
+    if(typeof ScrollTrigger!=='undefined'){
+      gsap.to('#hero-photo',{yPercent:18,ease:'none',scrollTrigger:{trigger:'#top',start:'top top',end:'bottom top',scrub:true}});
+      gsap.to('.hero-copy',{y:-35,opacity:0.15,ease:'none',scrollTrigger:{trigger:'#top',start:'center top',end:'bottom top',scrub:true}});
+      gsap.from('#chapter-links a',{opacity:0,y:25,stagger:0.08,duration:0.6,ease:'power2.out',scrollTrigger:{trigger:'.continue',start:'top 85%'}});
+      gsap.from('.portrait-frame',{opacity:0,x:-30,duration:0.9,ease:'power3.out',scrollTrigger:{trigger:'#about',start:'top 75%'}});
+      gsap.from('#about-copy',{opacity:0,y:25,duration:0.8,ease:'power2.out',scrollTrigger:{trigger:'#about',start:'top 75%'}});
+      gsap.from('#skills span',{opacity:0,scale:0.8,stagger:0.03,duration:0.5,ease:'back.out(1.5)',scrollTrigger:{trigger:'#skills',start:'top 90%'}});
+      gsap.from('#service-grid .service-card',{opacity:0,y:35,stagger:0.12,duration:0.75,ease:'power3.out',scrollTrigger:{trigger:'#services',start:'top 75%'}});
+      gsap.from('#project-rail .project-card',{opacity:0,y:45,scale:0.96,stagger:0.1,duration:0.85,ease:'power3.out',scrollTrigger:{trigger:'#work',start:'top 75%'}});
+      gsap.from('#toolkit-grid .service-card',{opacity:0,y:25,stagger:0.05,duration:0.6,ease:'power2.out',scrollTrigger:{trigger:'#skills-section',start:'top 75%'}});
+      gsap.from('.contact h2',{opacity:0,y:30,scale:0.9,duration:0.9,ease:'power4.out',scrollTrigger:{trigger:'#contact',start:'top 80%'}});
+      gsap.from('#contact-links a',{opacity:0,y:20,stagger:0.08,duration:0.6,ease:'power2.out',scrollTrigger:{trigger:'#contact',start:'top 85%'}});
+    }
+  }
+  function stage(which){document.querySelectorAll('header,main,footer').forEach(el=>el.inert=which!=='home');open.hidden=which!=='opening';profiles.hidden=which!=='profiles';document.body.style.overflow=which==='home'?'':'hidden';if(which==='profiles')profiles.querySelector('button').focus();if(which==='home'){setTimeout(()=>{initGSAP();if(typeof ScrollTrigger!=='undefined')ScrollTrigger.refresh()},80)}}
   document.querySelector('.skip-intro').onclick=()=>stage('profiles');document.querySelector('.play-start').onclick=()=>stage('profiles');
   $('replay').onclick=()=>{opener=document.activeElement;stage('opening');open.querySelector('.skip-intro').focus()};
   const orders={main:['about','services','work','journey','moments'],recruiter:['work','about','journey','services','moments'],developer:['work','services','about','journey','moments'],creative:['journey','work','about','moments','services']};
